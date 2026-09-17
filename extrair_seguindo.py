@@ -8,8 +8,8 @@ Uso:
 
 A conta usada para logar (variáveis de ambiente INSTA_LOGIN / INSTA_SENHA, ou
 prompt interativo) precisa ter permissão para ver a lista de "seguindo" do
-perfil informado na URL (perfil próprio, ou perfil que você administra e que
-te segue de volta / é público para essa conta).
+perfil informado na URL: perfil público, perfil próprio, ou perfil privado
+que a conta logada já segue (pedido aceito).
 
 O resultado é salvo em dados/<usuario>/<usuario>_<timestamp>.json e comparado
 automaticamente com a extração anterior, gerando um relatório de entradas e
@@ -35,6 +35,8 @@ from instaloader.exceptions import (
     LoginRequiredException,
     TwoFactorAuthRequiredException,
     BadCredentialsException,
+    PrivateProfileNotFollowedException,
+    ProfileNotExistsException,
 )
 
 logging.basicConfig(
@@ -155,6 +157,17 @@ def extrair_seguindo(loader: instaloader.Instaloader, username_alvo: str) -> lis
             log.info("Extração completa: %d/%d contas.", len(seguindo), total_esperado)
             return seguindo
 
+        except ProfileNotExistsException:
+            log.error("Perfil @%s não existe (ou o link está errado).", username_alvo)
+            sys.exit(1)
+        except PrivateProfileNotFollowedException:
+            log.error(
+                "Perfil @%s é privado e a conta logada não o segue (ou o pedido "
+                "de seguir ainda está pendente). Aceite o pedido primeiro, ou "
+                "logue com uma conta que já o siga.",
+                username_alvo,
+            )
+            sys.exit(1)
         except LoginRequiredException:
             raise
         except ConnectionException as e:
