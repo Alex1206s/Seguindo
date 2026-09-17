@@ -1,0 +1,5 @@
+.sessoes/
+dados/
+__pycache__/
+*.pyc
+.venv/
